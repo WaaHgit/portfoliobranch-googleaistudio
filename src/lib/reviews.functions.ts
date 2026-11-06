@@ -96,13 +96,17 @@ export const submitReview = createServerFn({ method: "POST" })
       };
     }
 
-    await sendEditLinkEmail({ to: email, name: data.client_name.trim(), token, firstTime: true });
-    await sendAdminNewReviewEmail({
-      name: data.client_name.trim(),
-      email,
-      rating: data.rating,
-      text: data.review_text.trim(),
-    });
+    try {
+      await sendEditLinkEmail({ to: email, name: data.client_name.trim(), token, firstTime: true });
+      await sendAdminNewReviewEmail({
+        name: data.client_name.trim(),
+        email,
+        rating: data.rating,
+        text: data.review_text.trim(),
+      });
+    } catch (err) {
+      console.error("[reviews] email dispatch failed (review is safely stored in database):", err);
+    }
 
     return { ok: true as const };
   });
@@ -186,9 +190,12 @@ export const resendEditLink = createServerFn({ method: "POST" })
       const token = newToken();
       await supabaseAdmin
         .from("reviews")
-        .update({ edit_token: token, edit_token_expires_at: tokenExpiry() })
-        .eq("id", row.id);
-      await sendEditLinkEmail({ to: email, name: row.client_name, token, firstTime: false });
+        .update({ edit_token: token, edit_token_expires_at: tokenExpiry() });
+      try {
+        await sendEditLinkEmail({ to: email, name: row.client_name, token, firstTime: false });
+      } catch (err) {
+        console.error("[reviews] resend edit link email failed:", err);
+      }
     }
     return { ok: true as const };
   });

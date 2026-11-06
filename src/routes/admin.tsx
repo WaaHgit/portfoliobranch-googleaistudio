@@ -1928,13 +1928,19 @@ function ConfirmBookingModal({
         toast.error(res.reason ?? "Could not confirm");
         return;
       }
-      if (res.calendar_added)
+      if (res.calendar_added && res.htmlLink) {
         toast.success(
-          editMode
-            ? "Updated and synced to Google Calendar ✅"
-            : "Confirmed and added to Google Calendar ✅",
+          editMode ? "Updated & confirmed in database ✅" : "Confirmed booking in database ✅",
+          {
+            action: {
+              label: "Add to Calendar",
+              onClick: () => window.open(res.htmlLink!, "_blank"),
+            },
+          },
         );
-      else toast.success(`Saved. ${res.reason ?? ""}`);
+      } else {
+        toast.success(editMode ? "Updated & confirmed ✅" : "Confirmed booking ✅");
+      }
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
