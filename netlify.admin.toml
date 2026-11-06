@@ -1,0 +1,29 @@
+# Netlify Configuration for Separate Admin Application Deployment
+
+[build]
+  command = "npm run build"
+  publish = ".output/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Redirect root immediately to /admin (which redirects to /auth if unauthenticated)
+[[redirects]]
+  from = "/"
+  to = "/admin"
+  status = 302
+  force = true
+
+# SPA client-side fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
